@@ -1,0 +1,522 @@
+---
+title: "Práctica 2: Limpieza y validación de los datos"
+author: "Alba Rollano Corroto"
+date: "05 Enero 2021"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+
+```
+\newpage
+
+\hfill
+
+# 1. Detalles de la activdad
+
+\hfill
+
+## 1.1 Descripcion
+
+
+\hfill
+
+En esta actividad se presenta un caso practico orientado a identificar los datos relevantes para un proyecto analítico y usar las herramientas de integracion, limpieza, vvalidación y análisis de las mismas.
+
+\hfill
+
+
+## 1.2 Objetivos
+
+\hfill
+
+
+Los objetivos que se persiguen mediante el desarrollo de esta actividad práctica, son los siguientes: 
+
+- Aprender a aplicar los conocimientos adquiridos y su capacidad de resolución de problemas en entornos nuevos o poco conocidos dentro de contextos más amplios o multidisciplinares
+
+- Saber identificar los datos relevantes y los tratamientos necesarios (integración, limpieza y validacion) para llevar a cabo un proyecto analítico
+
+- Aprender a analizar los datos adecuadamente para abordar la información  contenida en los datos
+
+- Identificar la mejor representación de los reultados para aportar conclusiones sobre el problema planteado en el proceso análitico
+
+- Actuar con los principios éticos y legales relacionados con la manipulación de datos de datos en función del ámbito de aplicación
+
+- Desarrollar las habilidades de aprendizaje que permita continuar estudiando de un modo que tendrá que ser en gran medida autodirigido o autónomo
+
+- Desarrollar la capacidad de búsqueda, gestión y uso de información y recursos en el ámbito de la ciencia de datos
+
+\hfill
+
+## 1.3 Competencias
+
+\hfill
+
+Así, las competencias del Máster en Data Science que se desarrollan son:
+
+- Capacidad de analizar un problema en el nivel de abstracción adecuado a cada situación y aplicar las habilidades y conocimientos adquiridos para abordarlo y resolverlo.
+
+- Capacidad para aplicar las técnicas específicas de tratamiento de datos (integración, transformación, limpieza y validación) para su posterior análisis.
+
+
+\newpage
+
+\hfill
+
+# 2. Resolución
+
+\hfill
+
+## 2.1 Descripcion del dataset
+
+\hfill\break
+
+El 15 Abril de 1912 tuvo lugar uno de los momentos más destacados del S.XX, el hundimiento del Titanic, donde 1502 personas, entre pasajeros y personal, perdieron la vida.
+
+Dada su calificación de el indestructible, no se consideró oprtuno la disponibilidad de tantas plazas en los botes salvavidas, como personas a bordo. Es por ello, que el conjuntos de datos de las personas salvadas y muertas hayan sido fruto de estudio en numerosas ocasiones, con el fin de extraer conclusiones sobre las prioridades establecidas a la hora de tomar el bote salvavidas o no.
+
+En el presente estudio, se buscarán dichas conclusiones en base al conjunto de datos de Kaggle [Titanic](https://www.kaggle.com/c/titanic/overview), divido en :
+
+- Train.csv: dataset de entrenamiento con información de 891 personas 
+- Test.csv: dataset de validacion con in formación de 418 personas
+
+Entre ambas muestras se recoge un total de 1309 registros de datos de los pasajeros y tripulación, evaluandose hasta 12 variables:
+
+
+1. `PassengerId`: identificador numérico del pasajero
+2. `Survived`: identificador de supervivencia (0= No sovrevivió, 1= sobrevivió) --> Sólo disponible en Train.csv
+3. `PClass`: clase (1 = primera,2 = segunda, 3= tercera)
+4. `Name`: nombre 
+5. `Sex`: sexo 
+6. `Age`: edad
+7. `SibSp`: # de parientes abordo
+8. `Parch`: # de padres/hijos a bordo
+9. `Ticket`: número ticket
+10. `Fare`: tarifa pasajero
+11. `Cabin`: número cabina
+12. `Embarked`: puerto de embarque (C= Cherbourg, Q= Queenstown, S= Southhampton)
+
+\hfill
+
+## 2.2 Importancia y objetivos de los análisis
+
+\hfill\break
+
+A partir del conjunto de datos train anteriormente presentado, se plantea el estudio sobre que factores influyeron de manera más relevante a la hora de determinar si un pasajero o tripulante podía subir al bote salvavidas, y por ende salvar su vida , o no. Además, en base a este dataset, se generará un modelo predictivo, que determine, en base a ciertas caracteristicas relevantes, si un pasajero se salvaría o no. Y el cuál se probará en el dataset test.csv
+
+Adicionalmente, se podrá caracterizar a los pasajeros y tripulación que formaron parte de la embarcación Titanic, en lo que a distinción por genero, edad y clase se refiere.
+
+\hfill
+
+## 2.3 Análitica descriptiva
+
+\hfill
+
+En esta primera parte, se realizará un estudio inicial de los datos, así como la evaluación de las posibles relaciones existentes entre los diferentes parámetros.
+
+\hfill
+
+### 2.3.1 Lectura del fichero
+
+\hfill
+
+
+El primero de los pasos, será cargar los datos a evaluar:
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Carga de los datos test y train 
+
+test <- read.csv('C:/Users/Propietario/Desktop/Master en data science/Semestre 2/Tipologia y ciclo de vida de los datos/Practica 2/Dataset/test.csv',stringsAsFactors = FALSE)
+train <- read.csv('C:/Users/Propietario/Desktop/Master en data science/Semestre 2/Tipologia y ciclo de vida de los datos/Practica 2/Dataset/train.csv', stringsAsFactors = FALSE)
+
+# Se unen los dos conjuntos de datos en uno solo
+totalData <- bind_rows(train,test)
+filas=dim(train)[1]
+
+#Se muestra las primeras filas
+head( totalData ) 
+```
+
+\hfill
+
+Y verificar la estructura de los mismos:
+
+\hfill
+
+```{r,eval=TRUE,echo=TRUE}
+
+# Informacion de la estructura de los datos y sus variables
+str(totalData)
+
+```
+
+\hfill
+
+Donde se observa el tipo de dato asociado a cada variable. 
+
+\hfill
+
+### 2.3.1 Selección de los datos de interes
+
+\hfill
+
+Dado que el objetivo es analizar la caracteristicas más relevantes a la hora de determinar la supervivencia de una persona, se considera que las columnas *Ticket*, *Fare* y *Cabina* carecen de influencia, y por ende, pueden ser eliminadas del dataset:
+
+\hfill
+
+```{r,eval=TRUE,echo=TRUE}
+
+# Informacion de la estructura de los datos y sus variables
+totalData <- totalData[, -c(9,10,11)]
+
+```
+
+No obstante, cabe destacar que la variable *Fare* podría ser sinificativa si quisieramos evaluar el precio medio del ticket en total o en base a ciertas características. Como para esta actividad se descarta dicho cálculo se puede eliminar.
+
+Adicionalmente, las variables *PassengerID* y *Name* no aportan valor a la hora de extraer conclusiones, pero serán relevantes para identificar a cada pasajero o tripulante.
+
+\hfill
+
+### 2.3.2 Elementos nulos y vacios
+
+\hfill
+
+Uno de los aspectos más importantes en esta fase, es detectar la presencia de valores nulos o desconocidos. Normalmente, estos se deben a datos perdidos o desconocidos en el momento de recopilar los datos.
+
+Por este motivo, en primera instancia, se deberán localizar:
+
+\hfill
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Estadísticas de valores vacíos
+colSums(is.na(totalData))
+colSums(totalData=="")
+
+```
+
+Es decir, encontramos tanto valores NA como vacios, dentro de las variables *Survived*, *Age* y *Embarked*. 
+
+Llegados a este punto, se debe decidir como manejar estos registros. Una alternativas sería eliminar dichos datos, pero tendría una pérdida de información asociada. Los 418 registros desconocidos de la variable *Survived* corresponden con el dataset test.csv , y cuyo valor se ha de predecir a posteriori, por lo que se obviaran en este paso. Para *Age* y *Embarked* se procederá como sigue:
+
+\hfill
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+# Tomamos valor "C" para los valores vacíos de la variable "Embarked"
+totalData$Embarked[totalData$Embarked==""]="C"
+
+# Tomamos la media para valores vacíos de la variable "Age"
+totalData$Age[is.na(totalData$Age)] <- mean(totalData$Age,na.rm=T)
+
+# Y Discretizamos
+cols<-c("Survived","Pclass","Sex","Embarked")
+for (i in cols){
+  totalData[,i] <- as.factor(totalData[,i])
+}
+
+```
+
+\hfill
+
+### 2.3.3 Valores extremos
+
+\hfill
+
+Se entiende por valor extremo o *outlier*, aquellos datos que parecen no ser congruentes si los comparamos con el resto de los datos. Existen dos vías para identificar dichos valores dentro de un dataset:
+
+- Representar un diagrama de caja por cada variable y evaluar si existe algún valor que dista mucho del rango intercuartílico (la caja)
+
+- Mediante la función box.plot.stats() de R
+
+Dada la simplicidad del mismo, se hará uso del segundo método para las variables *Age*, *Sibsp*, *Parch*. El resto de variables se obviaran por no ser numéricas o discretas:
+
+\hfill
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+boxplot.stats(totalData$Age)$out
+
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+boxplot.stats(totalData$SibSp)$out
+
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+boxplot.stats(totalData$Parch)$out
+
+```
+
+Si se analizan dichos valores, se observa que son coherentes y por tanto, no descartables. Por lo que no se realizará ninguna acción al respecto.
+
+\hfill
+
+### 2.3.4 Exportación de datos
+
+\hfill
+
+Una vez acometidos los procesos de integración, validación y limpieza sobre el dataset inicial, se procede a guardarlos bajo un nuevo fichero denominado Titanic_clean.csv: 
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Exportación del dataset limpio en .csv
+
+write.csv(totalData,'C:/Users/Propietario/Desktop/Master en data science/Semestre 2/Tipologia y ciclo de vida de los datos/Practica 2/Dataset/Titanic_clean.csv')
+
+```
+
+\hfill
+
+## 2.4 Análisis de los datos
+
+\hfill
+
+En esta segunda fase de la actividad, tomando como referencia la base de datos trabajada, se trabajará en buscar relaciones entre las diferentes variables.
+
+
+\hfill
+
+### 2.4.1 Visualización previa
+
+\hfill
+
+El primer paso será representar gráficamente los atributos de la muestra con el fin de extraer información y conclusiones previas del conjunto de los datos de estudio:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Visualizamos la relación entre las variables "sex" y "survival":
+ggplot(data=totalData[1:filas,],aes(x=Sex,fill=Survived))+geom_bar()
+
+# Otro punto de vista. Survival como función de Embarked:
+ggplot(data = totalData[1:filas,],aes(x=Embarked,fill=Survived))+geom_bar(position="fill")+ylab("Frecuencia")
+
+```
+
+De donde se extrae:
+
+- El número de hombres que embarcaron eran casi el doble que el de mujeres
+- Los supervivientes eran en su mayoria mujeres (casi el doble que de hombres)
+- El mayor ratio de los supervivientes embarcaron en Cherbourgh, pudiendo obtener las tasas de supervivencia mediante el uso de la matriz de porcentages de frecuencia. Por ejemplo, la probabilidad de sobrevivir si se embarcó en "C" es de un 55,88%
+
+\hfill
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+t<-table(totalData[1:filas,]$Embarked,totalData[1:filas,]$Survived)
+for (i in 1:dim(t)[1]){
+    t[i,]<-t[i,]/sum(t[i,])*100
+}
+t
+```
+
+\hfill
+
+De cara a trabajar con las 3 variables: *Embarked*, *Survived* y *Pclass*, se puede obtener el gráfico de frecuencias:
+
+\hfill
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Ahora, podemos dividir el gráfico de Embarked por Pclass:
+ggplot(data = totalData[1:filas,],aes(x=Embarked,fill=Survived))+geom_bar(position="fill")+facet_wrap(~Pclass)
+```
+
+\hfill
+
+O comparando de dos en dos gráficos de frecuencias: Survived-SibSp y Survived-Parch:
+
+\hfill
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Survivial como función de SibSp y Parch
+ggplot(data = totalData[1:filas,],aes(x=SibSp,fill=Survived))+geom_bar()
+ggplot(data = totalData[1:filas,],aes(x=Parch,fill=Survived))+geom_bar()
+# Se observa como las forma de estos dos gráficos es similar. Este hecho puede indicar presencia de correlaciones altas.
+```
+
+\hfill
+
+En última instancia, como overview, se pueden comparar los atributos Age y Survived, siendo el parámetro position="fill" la proporción acumulada de un atributo dentro de otro.
+
+\hfill
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Survival como función de age:
+totalData1<-totalData[1:filas,]
+ggplot(data = totalData1[!(is.na(totalData[1:filas,]$Age)),],aes(x=Age,fill=Survived))+geom_histogram(binwidth =3)
+ggplot(data = totalData1[!is.na(totalData[1:filas,]$Age),],aes(x=Age,fill=Survived))+geom_histogram(binwidth = 3,position="fill")+ylab("Frecuencia")
+```
+
+
+\hfill
+
+Es decir, los mayores de ratio de supervivientes, se dan para los menores de 8 años y los mayores de 80.
+
+De estos gráficos se obtiene información muy valiosa que se puede complementar con las tablas de contingencia (listadas abajo). Por un lado, la cantidad de pasajeros que sobrevivieron es menor en hombres y mujeres (hombres: 109 y mujeres 233). Si ademas se compará con la cantidad de hombres y  mujeres que no sobrevivieron (81 mujeres y 468 hombres), la tasa de muerte en hombres es muchísimo mayor (el 81% de los hombres murieron mientras que en mujeres ese porcentaje baja a 25,8%). 
+
+En cuanto a la clase en la que viajaban, los pasajeros que viajaban en primera clase fueron los únicos que el porcentaje de supervivencia era mayor que el de mortalidad. El 62,96% de los viajeros de primera clase sobrevivió, el 47,2% de los que viajaban en segunda clase mientras que de los viajeros de tercera y de la tripulación solo sobrevivieron un 24,23% respectivamente. Para finalizar, destacamos que la presencia de pasajeros adultos era mucho mayor que la de los niños (2092 frente a 109).
+
+\hfill
+
+```{r}
+tabla_SST <- table(totalData$Sex, totalData$Survived)
+tabla_SST
+prop.table(tabla_SST, margin = 1)
+
+tabla_SST <- table(totalData$Pclass, totalData$Survived)
+tabla_SST
+prop.table(tabla_SST, margin = 1)
+
+```
+
+
+\hfill
+
+### 2.4.2 Selección de los grupos de datos a analizar
+
+\hfill
+
+A continuación, se seleccionan los grupos dentro del conjunto de datos que pueden resultar de interes analizar y comparar:
+
+\hfill
+
+```{r}
+
+#Agrupación por genero
+totalData.male <- totalData[totalData$Sex == 'male',]
+totalData.female <- totalData[totalData$Sex == "female",]
+
+#Agrupación por clase
+totalData.primera <- totalData[totalData$Pclass == 1,]
+totalData.segunda <- totalData[totalData$Pclass == 2,]
+totalData.tercera <- totalData[totalData$Pclass == 3,]
+
+#Agrupación por puerto de embarque
+totalData.S <- totalData[totalData$Embarked == "S",]
+totalData.C <- totalData[totalData$Embarked== "C",]
+totalData.Q <- totalData[totalData$Embarked== "Q",]
+
+#Agrupación por supervivencia
+totalData.superviviente <- totalData[totalData$Survived == 1,]
+totalData.nosuperviviente <- totalData[totalData$Survived == 0,]
+
+```
+
+\hfill
+
+### 2.4.3 Comprobación de la normalidad de la varianza
+
+\hfill
+
+Según el teorema del límite central, para muestras mayores a 30 registros se puede asumir que sigue una distribución normal, no obstante, se verifica dicha normalidad por atributo en base a la prueba de normalidad *Anderson-Darling*.
+
+Así, se comprobará para cada prueba el p-valor. Si dicho valor es mayor al nivel de significación $\alpha= 0,05$, se puede considerar que dicha variable en cuestión sigue una distribución normal.
+
+\hfill
+
+```{r}
+
+library(nortest)
+
+```
+
+```{r}
+
+alpha = 0.05
+col.names = colnames(totalData)
+
+for (i in 1:ncol(totalData)) {
+  if (i == 1) cat("Las Variables que no siguen una distribución normal son:\n")
+  if (is.integer(totalData[,i]) | is.numeric(totalData[,i])) {
+    p_val = ad.test(totalData[,i])$p.value
+    if (p_val < alpha) {
+      cat(col.names[i])
+      
+      # Salida por pantalla
+      if (i < ncol(totalData) - 1) cat(", ")
+      if (i %% 3 == 0) cat("\n")
+    }
+  }
+}
+
+```
+
+
+\hfill
+
+### 2.4.4 Pruebas estadísticas
+
+\hfill
+
+Como evaluación de la muestra, se empleará el estadistico Chi Cuadrado para validar la hipótesis nula que la proporción de hombres que han sobrevivido es mayor a la de mujeres:
+
+\hfill
+
+```{r,eval=TRUE,echo=TRUE}
+
+mytable <- xtabs(~   Sex + Survived, data = totalData)
+addmargins(mytable)
+
+#Se estima el estadístico chi cuadrado
+chisq.test(mytable)
+
+```
+
+Dado que p-value < 0,05, se puede afirmar con un nivel de significacion de 0,05 que se rechaza la hipotesis nula. 
+
+
+### 2.4.5 Regresión
+
+\hfill
+
+Por ultimo, como parte del estudio inferencial, se procederá a un análisis regresional multivariante. El objetivo es determinar la dependencia de la variable *Survived*, en función de las variables: *Sex*, *Age*,*Class*,*Sibsp*,*Parch*,*Embarked*. 
+\hfill
+
+A continuación se construye el modelo de regresión:
+
+\hfill
+
+```{r,eval=TRUE,echo=TRUE}
+
+#Model= lm(formula = Survived ~ Sex, data = totalData[0:891,])
+#summary(Model)
+
+```
+\hfill
+
+# 3.Conclusiones
+
+\hfill
+
+Como se ha visto, se han realizado tanto análisis estádisticos como gráficos a partir de los cuales se han podido extraer las siguientes conclusiones:
+- El ratio de supervivientes mujeres es mayor al de los hombres
+- El porcentaje de hombres que embarcaron era mayor al de mujeres
+- Los pasajeros de 1 clase tenían mayor probabilidad de tomar un bote salva vidas
+- Niños y mayores presentaron mayor ratio de supervivencia
+
+Previamente, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). Para el caso del primero, se ha hecho uso de un método de imputación de valores de tal forma que no se deba eliminar registros del conjunto de datos inicial y que la ausencia de valores no implique llegar a resultados poco certeros en los análisis. Para el caso del segundo, el cual constituye un punto delicado a tratar, se ha optado por incluir los valores extremos en los análisis dado que parecen no resultar del todo atípicos si los comparamos con los valores que toman las correspondientes variables .
+
+\hfill
+
+# 4.Bibliografia
+
+\hfill
+
+1. Dalgaard, P. (2008). Introductory statistics with R. Springer Science & Business Media.
+2. Vegas, E. (2017). Preprocesamiento de datos. Material UOC.
+3. Gibergans, J. (2017). Regresión lineal múltiple. Material UOC.
+4. Rovira, C. (2008). Contraste de hipótesis. Material UOC.
